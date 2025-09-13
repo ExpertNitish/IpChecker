@@ -15,7 +15,6 @@
 <link id="favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-size='42'%3E🌐%3C/text%3E%3C/svg%3E">
 
 <style>
-/* Background Gradient */
 body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -29,8 +28,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Title / IP text */
-h1, .ip-text {
+h1 {
   color: #fff;
   font-size: 28px;
   text-align: center;
@@ -38,7 +36,7 @@ h1, .ip-text {
   transition: all 0.3s ease-in-out;
 }
 
-/* Glow effect for title when IP changes */
+/* Glow effect for heading */
 .glow {
   animation: glowPulse 1s infinite alternate;
 }
@@ -67,34 +65,6 @@ h1, .ip-text {
   to { box-shadow: 0 0 20px rgba(255, 102, 0, 1); }
 }
 
-/* Search Box */
-.search-box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 25px;
-}
-.search-box input[type="text"] {
-  padding: 10px 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px 0 0 6px;
-  outline: none;
-  font-size: 14px;
-}
-.search-box button {
-  padding: 10px 18px;
-  border: none;
-  background: #0066ff;
-  color: #fff;
-  border-radius: 0 6px 6px 0;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-}
-.search-box button:hover {
-  background: #004ecc;
-}
-
 /* Info Table */
 .info-box {
   background: #fff;
@@ -112,40 +82,21 @@ h1, .ip-text {
   font-size: 14px;
   color: #333;
 }
-.info-box td:first-child {
-  font-weight: bold;
-  color: #555;
-}
+.info-box td:first-child { font-weight: bold; color: #555; }
 .info-box tr:last-child td { border-bottom: none; }
 
 /* Map */
-#map {
-  height: 400px;
-  width: 100%;
-  max-width: 600px;
-  border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  margin-bottom: 30px;
-}
+#map { height: 400px; width: 100%; max-width: 600px; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); margin-bottom: 30px; }
 
 /* Footer */
-footer {
-  color: #fff;
-  margin-bottom: 15px;
-  font-weight: 500;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-  text-align: center;
-}
+footer { color: #fff; margin-bottom: 15px; font-weight: 500; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); text-align: center; }
 </style>
 </head>
 <body>
 
 <h1 id="siteTitle">IP & Location Tracker</h1>
-
-<!-- Notification bar -->
 <div id="ipChangeAlert"></div>
 
-<!-- Info Box -->
 <div class="info-box">
   <table>
     <tr><td>IP Address</td><td id="ip">Loading...</td></tr>
@@ -160,98 +111,93 @@ footer {
   </table>
 </div>
 
-<!-- Map -->
 <div id="map"></div>
-
 <footer>Built with 💜 Survey Captures</footer>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
 let lastIP = null;
 let map, marker;
+let titleBlinkInterval = null;
 
-const currencySymbols = {
-  USD: '$', CAD: 'CA$', AED: 'د.إ', SAR: 'ر.س', INR: '₹', GBP: '£', EUR: '€'
-};
+const currencySymbols = { USD:'$', CAD:'CA$', AED:'د.إ', SAR:'ر.س', INR:'₹', GBP:'£', EUR:'€' };
 
-// Function to set favicon normal globe
-function setFaviconNormal() {
+// Normal favicon 🌐
+function setFaviconNormal(){
   const favicon = document.getElementById('favicon');
-  const svgIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="42">🌐</text>
-    </svg>`;
-  favicon.href = "data:image/svg+xml," + encodeURIComponent(svgIcon);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="42">🌐</text></svg>`;
+  favicon.href = "data:image/svg+xml," + encodeURIComponent(svg);
 }
 
-// Function to set favicon danger ⚠️
-function setFaviconDanger() {
+// Danger favicon ⚠️
+function setFaviconDanger(){
   const favicon = document.getElementById('favicon');
-  const svgIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="48">⚠️</text>
-    </svg>`;
-  favicon.href = "data:image/svg+xml," + encodeURIComponent(svgIcon);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="48">⚠️</text></svg>`;
+  favicon.href = "data:image/svg+xml," + encodeURIComponent(svg);
 }
 
-function renderData(data) {
-  document.getElementById("ip").textContent = data.ip || "N/A";
-  document.getElementById("city").textContent = data.city || "N/A";
-  document.getElementById("region").textContent = data.region || "N/A";
-  document.getElementById("country").textContent = data.country_name || "N/A";
-  document.getElementById("zip").textContent = data.postal || "N/A";
-  document.getElementById("lat").textContent = data.latitude || "N/A";
-  document.getElementById("lon").textContent = data.longitude || "N/A";
-  document.getElementById("timezone").textContent = data.timezone || "N/A";
-  const symbol = currencySymbols[data.currency] || '';
-  document.getElementById("currency").textContent = data.currency ? `${data.currency} ${symbol}` : "N/A";
+// Render IP & location data
+function renderData(data){
+  document.getElementById("ip").textContent = data.ip||"N/A";
+  document.getElementById("city").textContent = data.city||"N/A";
+  document.getElementById("region").textContent = data.region||"N/A";
+  document.getElementById("country").textContent = data.country_name||"N/A";
+  document.getElementById("zip").textContent = data.postal||"N/A";
+  document.getElementById("lat").textContent = data.latitude||"N/A";
+  document.getElementById("lon").textContent = data.longitude||"N/A";
+  document.getElementById("timezone").textContent = data.timezone||"N/A";
+  const sym = currencySymbols[data.currency]||'';
+  document.getElementById("currency").textContent = data.currency? `${data.currency} ${sym}`:"N/A";
 
-  if (!map) {
-    map = L.map('map').setView([data.latitude, data.longitude], 10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-    marker = L.marker([data.latitude, data.longitude]).addTo(map)
-      .bindPopup(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`)
-      .openPopup();
+  if(!map){
+    map = L.map('map').setView([data.latitude,data.longitude],10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+    marker = L.marker([data.latitude,data.longitude]).addTo(map)
+      .bindPopup(`<b>${data.city||'Unknown'}, ${data.region||''}</b><br>${data.country_name||''}`).openPopup();
   } else {
-    map.setView([data.latitude, data.longitude], 10);
-    marker.setLatLng([data.latitude, data.longitude])
-      .setPopupContent(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`);
+    map.setView([data.latitude,data.longitude],10);
+    marker.setLatLng([data.latitude,data.longitude]).setPopupContent(`<b>${data.city||'Unknown'}, ${data.region||''}</b><br>${data.country_name||''}`);
   }
 }
 
-function checkIP() {
+// Blink title continuously
+function startTitleBlink(){
+  if(titleBlinkInterval) clearInterval(titleBlinkInterval);
+  const original = "IP & Location Tracker";
+  const alertTitle = "⚠️⚠️⚠️⚠️⚠️⚠️";
+  let showAlert = false;
+  titleBlinkInterval = setInterval(()=>{
+    document.title = showAlert?alertTitle:original;
+    showAlert=!showAlert;
+  }, 1000);
+}
+
+// Check IP
+function checkIP(){
   fetch('https://ipapi.co/json/')
-    .then(res => res.json())
-    .then(data => {
-      if (lastIP && lastIP !== data.ip) {
-        // Show alert
-        const alertBar = document.getElementById("ipChangeAlert");
-        alertBar.style.display = "block";
-        alertBar.innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
-
-        // Change tab title
-        document.title = "⚠️ Changed!";
-
-        // Make site title glow
+    .then(res=>res.json())
+    .then(data=>{
+      if(lastIP && lastIP!==data.ip){
+        document.getElementById("ipChangeAlert").style.display="block";
+        document.getElementById("ipChangeAlert").innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
+        
+        // Glow heading
         document.getElementById("siteTitle").classList.add("glow");
 
-        // Change favicon to danger
+        // Favicon danger
         setFaviconDanger();
+
+        // Blink tab title continuously
+        startTitleBlink();
       }
       lastIP = data.ip;
       renderData(data);
-    })
-    .catch(err => console.error("Error fetching IP info:", err));
+    }).catch(err=>console.error("Error fetching IP info:",err));
 }
 
-// Run once and then every 30s
+// Initial run + interval
 checkIP();
-setInterval(checkIP, 30000);
+setInterval(checkIP,30000);
 </script>
-
 </body>
 </html>
