@@ -217,49 +217,34 @@ function startTitleBlink(){
   }, 1000);
 }
 
-// Get IPv4 only
-function getIPv4() {
-  return fetch('https://ipapi.co/ip/')
-    .then(res => res.text())
-    .then(ipv4 => ipv4.trim())
-    .catch(err => {
-      console.error("Error fetching IPv4:", err);
-      return null;
-    });
-}
-
 // Check IP
-async function checkIP(){
-  try {
-    const ipv4 = await getIPv4();
-    const data = await fetch('https://ipapi.co/json/').then(r=>r.json());
-    if(ipv4) data.ip = ipv4;
-
-    if(lastIP && lastIP!==data.ip){
-      document.getElementById("ipChangeAlert").style.display="block";
-      document.getElementById("ipChangeAlert").innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
-      document.getElementById("siteTitle").classList.add("glow");
-      setFaviconDanger();
-      startTitleBlink();
-    }
-    lastIP = data.ip;
-    renderData(data);
-  } catch(err){ console.error(err); }
+function checkIP(){
+  fetch('https://ipapi.co/json/')
+    .then(res=>res.json())
+    .then(data=>{
+      if(lastIP && lastIP!==data.ip){
+        document.getElementById("ipChangeAlert").style.display="block";
+        document.getElementById("ipChangeAlert").innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
+        document.getElementById("siteTitle").classList.add("glow");
+        setFaviconDanger();
+        startTitleBlink();
+      }
+      lastIP = data.ip;
+      renderData(data);
+    }).catch(err=>console.error(err));
 }
 
 // Search IP function
-document.getElementById("searchBtn").addEventListener("click", async ()=>{
+document.getElementById("searchBtn").addEventListener("click", ()=>{
   const ip = document.getElementById("searchIP").value.trim();
   if(!ip) return alert("Please enter a valid IP address");
-  try {
-    const data = await fetch(`https://ipapi.co/${ip}/json/`).then(r=>r.json());
-    // If IPv4 exists in response, prefer it
-    if(data.ip && data.ip.includes(":")) {
-      const ipv4 = await getIPv4();
-      if(ipv4) data.ip = ipv4;
-    }
-    renderData(data);
-  } catch(err){ alert("Error fetching IP info"); }
+  fetch(`https://ipapi.co/${ip}/json/`)
+    .then(res=>res.json())
+    .then(data=>{
+      renderData(data);
+      map.setView([data.latitude,data.longitude],10);
+      marker.setLatLng([data.latitude,data.longitude]).setPopupContent(`<b>${data.city||'Unknown'}, ${data.region||''}</b><br>${data.country_name||''}`);
+    }).catch(err=>alert("Error fetching IP info"));
 });
 
 // Initial run + interval
