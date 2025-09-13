@@ -66,37 +66,6 @@ h1 {
   to { box-shadow: 0 0 20px rgba(255, 204, 0, 1); }
 }
 
-/* Search Box */
-.search-box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.search-box input[type="text"] {
-  padding: 10px 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px 0 0 6px;
-  outline: none;
-  font-size: 14px;
-}
-
-.search-box button {
-  padding: 10px 18px;
-  border: none;
-  background: #0066ff;
-  color: #fff;
-  border-radius: 0 6px 6px 0;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-}
-
-.search-box button:hover {
-  background: #004ecc;
-}
-
 /* Info Table */
 .info-box {
   background: #fff;
@@ -125,7 +94,6 @@ h1 {
   color: #555;
 }
 
-/* Remove last row border */
 .info-box tr:last-child td {
   border-bottom: none;
 }
@@ -177,12 +145,12 @@ footer {
 
 <footer>Built with 💜 Survey Captures</footer>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 let lastIP = null;
 let map, marker;
+let titleBlinkInterval = null;
 
 const currencySymbols = {
   USD: '$', CAD: 'CA$', AED: 'د.إ', SAR: 'ر.س', INR: '₹', GBP: '£', EUR: '€'
@@ -215,12 +183,20 @@ function renderData(data) {
   }
 }
 
+function startTitleBlink(newTitle, originalTitle) {
+  if (titleBlinkInterval) clearInterval(titleBlinkInterval);
+  let visible = true;
+  titleBlinkInterval = setInterval(() => {
+    document.title = visible ? newTitle : originalTitle;
+    visible = !visible;
+  }, 1000); // change every 1 second
+}
+
 function checkIP() {
   fetch('https://ipapi.co/json/')
     .then(res => res.json())
     .then(data => {
       if (lastIP && lastIP !== data.ip) {
-        // Show alert bar
         const alertBar = document.getElementById("ipChangeAlert");
         alertBar.style.display = "block";
         alertBar.innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
@@ -228,8 +204,8 @@ function checkIP() {
         // Make heading glow
         document.getElementById("pageTitle").classList.add("glow");
 
-        // Change tab title
-        document.title = `⚠️ IP Changed!`;
+        // Start blinking tab title
+        startTitleBlink("⚠️ Changed!", "IP & Location Tracker");
       }
       lastIP = data.ip;
       renderData(data);
