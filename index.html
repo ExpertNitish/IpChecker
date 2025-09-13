@@ -11,6 +11,9 @@
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
+<!-- Favicon -->
+<link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2216%22>🟢</text></svg>">
+
 <style>
 /* Background Gradient */
 body {
@@ -183,13 +186,20 @@ function renderData(data) {
   }
 }
 
+// Function to change favicon to danger
+function setFaviconDanger() {
+  const favicon = document.getElementById('favicon');
+  favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2216%22>⚠️</text></svg>";
+}
+
+// Function to blink tab title
 function startTitleBlink(newTitle, originalTitle) {
   if (titleBlinkInterval) clearInterval(titleBlinkInterval);
   let visible = true;
   titleBlinkInterval = setInterval(() => {
     document.title = visible ? newTitle : originalTitle;
     visible = !visible;
-  }, 1000); // change every 1 second
+  }, 1000);
 }
 
 function checkIP() {
@@ -203,6 +213,9 @@ function checkIP() {
         
         // Make heading glow
         document.getElementById("pageTitle").classList.add("glow");
+
+        // Change favicon to danger
+        setFaviconDanger();
 
         // Start blinking tab title
         startTitleBlink("⚠️ Changed!", "IP & Location Tracker");
