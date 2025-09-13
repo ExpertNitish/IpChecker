@@ -183,25 +183,25 @@ function setFaviconDanger(){
 
 // Render data
 function renderData(data){
-  document.getElementById("ip").textContent = data.ip||"N/A";
-  document.getElementById("city").textContent = data.city||"N/A";
-  document.getElementById("region").textContent = data.region||"N/A";
-  document.getElementById("country").textContent = data.country_name||"N/A";
-  document.getElementById("zip").textContent = data.postal||"N/A";
-  document.getElementById("lat").textContent = data.latitude||"N/A";
-  document.getElementById("lon").textContent = data.longitude||"N/A";
-  document.getElementById("timezone").textContent = data.timezone||"N/A";
-  const sym = currencySymbols[data.currency]||'';
-  document.getElementById("currency").textContent = data.currency? `${data.currency} ${sym}`:"N/A";
+  document.getElementById("ip").textContent = data.ip || "N/A";
+  document.getElementById("city").textContent = data.city || "N/A";
+  document.getElementById("region").textContent = data.region || "N/A";
+  document.getElementById("country").textContent = data.country_name || "N/A";
+  document.getElementById("zip").textContent = data.postal || "N/A";
+  document.getElementById("lat").textContent = data.latitude || "N/A";
+  document.getElementById("lon").textContent = data.longitude || "N/A";
+  document.getElementById("timezone").textContent = data.timezone || "N/A";
+  const sym = currencySymbols[data.currency] || '';
+  document.getElementById("currency").textContent = data.currency ? `${data.currency} ${sym}` : "N/A";
 
-  if(!map){
-    map = L.map('map').setView([data.latitude,data.longitude],10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
-    marker = L.marker([data.latitude,data.longitude]).addTo(map)
-      .bindPopup(`<b>${data.city||'Unknown'}, ${data.region||''}</b><br>${data.country_name||''}`).openPopup();
+  if (!map) {
+    map = L.map('map').setView([data.latitude, data.longitude], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    marker = L.marker([data.latitude, data.longitude]).addTo(map)
+      .bindPopup(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`).openPopup();
   } else {
-    map.setView([data.latitude,data.longitude],10);
-    marker.setLatLng([data.latitude,data.longitude]).setPopupContent(`<b>${data.city||'Unknown'}, ${data.region||''}</b><br>${data.country_name||''}`);
+    map.setView([data.latitude, data.longitude], 10);
+    marker.setLatLng([data.latitude, data.longitude]).setPopupContent(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`);
   }
 }
 
@@ -212,26 +212,31 @@ function startTitleBlink(){
   const alertTitle = "⚠️⚠️⚠️⚠️⚠️⚠️";
   let showAlert = false;
   titleBlinkInterval = setInterval(()=>{
-    document.title = showAlert?alertTitle:original;
-    showAlert=!showAlert;
+    document.title = showAlert ? alertTitle : original;
+    showAlert = !showAlert;
   }, 1000);
 }
 
 // Check IP
 function checkIP(){
   fetch('https://ipapi.co/json/')
-    .then(res=>res.json())
-    .then(data=>{
-      if(lastIP && lastIP!==data.ip){
-        document.getElementById("ipChangeAlert").style.display="block";
+    .then(res => res.json())
+    .then(data => {
+      // Only show alert if new IP exists and is different
+      if (data.ip && lastIP && lastIP !== data.ip) {
+        document.getElementById("ipChangeAlert").style.display = "block";
         document.getElementById("ipChangeAlert").innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
         document.getElementById("siteTitle").classList.add("glow");
         setFaviconDanger();
         startTitleBlink();
       }
-      lastIP = data.ip;
+
+      // Update lastIP only if data.ip exists
+      if (data.ip) lastIP = data.ip;
+
       renderData(data);
-    }).catch(err=>console.error(err));
+    })
+    .catch(err => console.error(err));
 }
 
 // Search IP function
@@ -239,17 +244,20 @@ document.getElementById("searchBtn").addEventListener("click", ()=>{
   const ip = document.getElementById("searchIP").value.trim();
   if(!ip) return alert("Please enter a valid IP address");
   fetch(`https://ipapi.co/${ip}/json/`)
-    .then(res=>res.json())
-    .then(data=>{
+    .then(res => res.json())
+    .then(data => {
       renderData(data);
-      map.setView([data.latitude,data.longitude],10);
-      marker.setLatLng([data.latitude,data.longitude]).setPopupContent(`<b>${data.city||'Unknown'}, ${data.region||''}</b><br>${data.country_name||''}`);
-    }).catch(err=>alert("Error fetching IP info"));
+      if(data.latitude && data.longitude){
+        map.setView([data.latitude, data.longitude], 10);
+        marker.setLatLng([data.latitude, data.longitude]).setPopupContent(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`);
+      }
+    })
+    .catch(err => alert("Error fetching IP info"));
 });
 
 // Initial run + interval
 checkIP();
-setInterval(checkIP,30000);
+setInterval(checkIP, 30000);
 </script>
 </body>
 </html>
