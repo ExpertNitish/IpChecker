@@ -22,18 +22,37 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 40px 20px; /* more breathing space */
+  padding: 30px 15px;
+  box-sizing: border-box;
 }
 
-/* Title */
-h1 {
+/* Title / IP text */
+h1, .ip-text {
   color: #fff;
-  font-size: 32px;
+  font-size: 28px;
   text-align: center;
-  margin-bottom: 30px;
-  font-weight: 700;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  margin-bottom: 25px;
+}
+
+/* Notification bar */
+#ipChangeAlert {
+  display: none;
+  background: #ffcc00;
+  color: #222;
+  font-weight: bold;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  text-align: center;
+  animation: glow 1s infinite alternate;
+  box-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+  width: 100%;
+  max-width: 600px;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 10px rgba(255, 204, 0, 0.8); }
+  to { box-shadow: 0 0 20px rgba(255, 204, 0, 1); }
 }
 
 /* Search Box */
@@ -41,28 +60,25 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 30px;
-  width: 100%;
-  max-width: 420px;
+  margin-bottom: 25px;
 }
 
 .search-box input[type="text"] {
-  flex: 1;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border: 1px solid #ccc;
-  border-radius: 8px 0 0 8px;
+  border-radius: 6px 0 0 6px;
   outline: none;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .search-box button {
-  padding: 12px 20px;
+  padding: 10px 18px;
   border: none;
   background: #0066ff;
   color: #fff;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 6px 6px 0;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   transition: background 0.3s;
 }
 
@@ -73,12 +89,12 @@ h1 {
 /* Info Table */
 .info-box {
   background: #fff;
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  padding: 25px 30px;
+  padding: 25px;
   width: 100%;
-  max-width: 420px;
-  margin-bottom: 35px;
+  max-width: 400px;
+  margin-bottom: 30px;
 }
 
 .info-box table {
@@ -87,14 +103,14 @@ h1 {
 }
 
 .info-box td {
-  padding: 10px 8px;
+  padding: 10px 6px;
   border-bottom: 1px solid #eee;
-  font-size: 15px;
+  font-size: 14px;
   color: #333;
 }
 
 .info-box td:first-child {
-  font-weight: 600;
+  font-weight: bold;
   color: #555;
 }
 
@@ -105,21 +121,21 @@ h1 {
 
 /* Map */
 #map {
-  height: 420px;
+  height: 400px;
   width: 100%;
-  max-width: 900px;
-  margin-bottom: 40px;
-  border-radius: 15px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  max-width: 600px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  margin-bottom: 30px;
 }
 
 /* Footer */
 footer {
   color: #fff;
-  margin: 15px 0 25px;
+  margin-bottom: 15px;
   font-weight: 500;
-  font-size: 14px;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+  text-align: center;
 }
 </style>
 </head>
@@ -127,23 +143,20 @@ footer {
 
 <h1>IP & Location Tracker</h1>
 
-<!-- Search Box -->
-<div class="search-box">
-  <input type="text" id="searchIP" placeholder="Enter IP address...">
-  <button onclick="lookupIP()">Search</button>
-</div>
+<!-- Notification bar -->
+<div id="ipChangeAlert"></div>
 
-<!-- Info Table -->
+<!-- Info Box -->
 <div class="info-box">
   <table>
     <tr><td>IP Address</td><td id="ip">Loading...</td></tr>
     <tr><td>City</td><td id="city">Loading...</td></tr>
-    <tr><td>Region</td><td id="region">Loading...</td></tr>
+    <tr><td>Region/State</td><td id="region">Loading...</td></tr>
     <tr><td>Country</td><td id="country">Loading...</td></tr>
-    <tr><td>ZIP</td><td id="zip">Loading...</td></tr>
+    <tr><td>ZIP / Postal Code</td><td id="zip">Loading...</td></tr>
     <tr><td>Latitude</td><td id="lat">Loading...</td></tr>
     <tr><td>Longitude</td><td id="lon">Loading...</td></tr>
-    <tr><td>Timezone</td><td id="timezone">Loading...</td></tr>
+    <tr><td>Time Zone</td><td id="timezone">Loading...</td></tr>
     <tr><td>Currency</td><td id="currency">Loading...</td></tr>
   </table>
 </div>
@@ -153,50 +166,62 @@ footer {
 
 <footer>Built with 💜 Survey Captures</footer>
 
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+let lastIP = null;
+let map, marker;
+
 const currencySymbols = {
-    USD: '$', CAD: 'CA$', AED: 'د.إ', SAR: 'ر.س', INR: '₹', GBP: '£', EUR: '€'
+  USD: '$', CAD: 'CA$', AED: 'د.إ', SAR: 'ر.س', INR: '₹', GBP: '£', EUR: '€'
 };
 
 function renderData(data) {
-    document.getElementById("ip").textContent = data.ip || "N/A";
-    document.getElementById("city").textContent = data.city || "N/A";
-    document.getElementById("region").textContent = data.region || "N/A";
-    document.getElementById("country").textContent = data.country_name || "N/A";
-    document.getElementById("zip").textContent = data.postal || "N/A";
-    document.getElementById("lat").textContent = data.latitude || "N/A";
-    document.getElementById("lon").textContent = data.longitude || "N/A";
-    document.getElementById("timezone").textContent = data.timezone || "N/A";
-    const symbol = currencySymbols[data.currency] || '';
-    document.getElementById("currency").textContent = data.currency ? `${data.currency} ${symbol}` : "N/A";
+  document.getElementById("ip").textContent = data.ip || "N/A";
+  document.getElementById("city").textContent = data.city || "N/A";
+  document.getElementById("region").textContent = data.region || "N/A";
+  document.getElementById("country").textContent = data.country_name || "N/A";
+  document.getElementById("zip").textContent = data.postal || "N/A";
+  document.getElementById("lat").textContent = data.latitude || "N/A";
+  document.getElementById("lon").textContent = data.longitude || "N/A";
+  document.getElementById("timezone").textContent = data.timezone || "N/A";
+  const symbol = currencySymbols[data.currency] || '';
+  document.getElementById("currency").textContent = data.currency ? `${data.currency} ${symbol}` : "N/A";
 
-    // Map
-    const map = L.map('map').setView([data.latitude, data.longitude], 10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-        maxZoom:19, attribution:'&copy; OpenStreetMap contributors'
+  if (!map) {
+    map = L.map('map').setView([data.latitude, data.longitude], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
-    L.marker([data.latitude,data.longitude]).addTo(map)
-        .bindPopup(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country || ''}`)
-        .openPopup();
+    marker = L.marker([data.latitude, data.longitude]).addTo(map)
+      .bindPopup(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`)
+      .openPopup();
+  } else {
+    map.setView([data.latitude, data.longitude], 10);
+    marker.setLatLng([data.latitude, data.longitude])
+      .setPopupContent(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`);
+  }
 }
 
-// Auto-load user IP
-fetch('https://ipapi.co/json/')
+function checkIP() {
+  fetch('https://ipapi.co/json/')
     .then(res => res.json())
-    .then(data => renderData(data))
-    .catch(err => console.error("Error fetching IP info:", err));
-
-// Search by IP
-function lookupIP() {
-  const ip = document.getElementById("searchIP").value.trim();
-  if (!ip) return;
-  fetch(`https://ipapi.co/${ip}/json/`)
-    .then(res => res.json())
-    .then(data => renderData(data))
+    .then(data => {
+      if (lastIP && lastIP !== data.ip) {
+        const alertBar = document.getElementById("ipChangeAlert");
+        alertBar.style.display = "block";
+        alertBar.textContent = `⚠️ Your IP has changed! New IP: ${data.ip}`;
+      }
+      lastIP = data.ip;
+      renderData(data);
+    })
     .catch(err => console.error("Error fetching IP info:", err));
 }
+
+// Run once and then every 30s
+checkIP();
+setInterval(checkIP, 30000);
 </script>
 
 </body>
