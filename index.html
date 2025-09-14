@@ -134,16 +134,13 @@ footer { color: #fff; margin-bottom: 15px; font-weight: 500; text-shadow: 1px 1p
 <h1 id="siteTitle">IP & Location Tracker</h1>
 <div id="infoMessage">This website shows your IP and location. If your IP changes, you will get an alert showing your old and new IP.</div>
 
-<!-- Notification bar -->
 <div id="ipChangeAlert"></div>
 
-<!-- Search Box -->
 <div class="search-box">
   <input type="text" id="searchIP" placeholder="Enter IP address to search">
   <button id="searchBtn">Search</button>
 </div>
 
-<!-- Info Box -->
 <div class="info-box">
   <table>
     <tr><td>IP Address</td><td id="ip">Loading...</td></tr>
@@ -164,6 +161,7 @@ footer { color: #fff; margin-bottom: 15px; font-weight: 500; text-shadow: 1px 1p
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 let lastIP = null;
+let firstLoad = true;
 let map, marker;
 let titleBlinkInterval = null;
 
@@ -181,10 +179,9 @@ function setFaviconDanger(){
   favicon.href = "data:image/svg+xml," + encodeURIComponent(svg);
 }
 
-// Render data
+// Render function
 function renderData(data){
   if(!data) return;
-
   document.getElementById("ip").textContent = data.ip || "N/A";
   document.getElementById("city").textContent = data.city || "N/A";
   document.getElementById("region").textContent = data.region || "N/A";
@@ -197,74 +194,74 @@ function renderData(data){
   document.getElementById("currency").textContent = data.currency ? `${data.currency} ${sym}` : "N/A";
 
   if(!map && data.latitude && data.longitude){
-    map = L.map('map').setView([data.latitude, data.longitude], 10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
-    marker = L.marker([data.latitude, data.longitude]).addTo(map)
+    map = L.map('map').setView([data.latitude,data.longitude],10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
+    marker = L.marker([data.latitude,data.longitude]).addTo(map)
       .bindPopup(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`).openPopup();
   } else if(data.latitude && data.longitude){
-    map.setView([data.latitude, data.longitude], 10);
-    marker.setLatLng([data.latitude, data.longitude]).setPopupContent(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`);
+    map.setView([data.latitude,data.longitude],10);
+    marker.setLatLng([data.latitude,data.longitude]).setPopupContent(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`);
   }
 }
 
-// Blink title continuously
+// Blink title
 function startTitleBlink(){
   if(titleBlinkInterval) clearInterval(titleBlinkInterval);
   const original = "IP & Location Tracker";
   const alertTitle = "⚠️⚠️⚠️⚠️⚠️⚠️";
   let showAlert = false;
   titleBlinkInterval = setInterval(()=>{
-    document.title = showAlert ? alertTitle : original;
+    document.title = showAlert? alertTitle : original;
     showAlert = !showAlert;
-  }, 1000);
+  },1000);
 }
 
 // Check IP
 function checkIP(){
   fetch('https://ipapi.co/json/')
-    .then(res => res.json())
-    .then(data => {
-      if(!data) return;
+    .then(res=>res.json())
+    .then(data=>{
+      if(!data || !data.ip) return;
 
-      // Always render data to replace "Loading..."
-      renderData(data);
+      // First load: render all details
+      if(firstLoad){
+        renderData(data);
+        lastIP = data.ip;
+        firstLoad = false;
+        return;
+      }
 
-      // Alert only if IP changed (and we had previous IP)
-      if(lastIP && data.ip && lastIP !== data.ip){
-        document.getElementById("ipChangeAlert").style.display = "block";
-        document.getElementById("ipChangeAlert").innerHTML =
-          `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
+      // Only update if IP changed
+      if(lastIP && lastIP !== data.ip){
+        renderData(data);
+        document.getElementById("ipChangeAlert").style.display="block";
+        document.getElementById("ipChangeAlert").innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
         document.getElementById("siteTitle").classList.add("glow");
         setFaviconDanger();
         startTitleBlink();
+        lastIP = data.ip;
       }
-
-      // Update lastIP if valid
-      if(data.ip) lastIP = data.ip;
-    })
-    .catch(err => console.error("Error fetching IP data:", err));
+    }).catch(err=>console.error("Error fetching IP data:", err));
 }
 
-// Search IP function
+// Search IP
 document.getElementById("searchBtn").addEventListener("click", ()=>{
   const ip = document.getElementById("searchIP").value.trim();
   if(!ip) return alert("Please enter a valid IP address");
+
   fetch(`https://ipapi.co/${ip}/json/`)
-    .then(res => res.json())
-    .then(data => {
-      if(!data || !data.ip) return alert("Invalid IP or data not found");
+    .then(res=>res.json())
+    .then(data=>{
+      if(!data) return alert("No data found for this IP");
+      if(data.error) return alert(`Error: ${data.reason || 'Invalid IP'}`);
       renderData(data);
-      if(data.latitude && data.longitude){
-        map.setView([data.latitude, data.longitude], 10);
-        marker.setLatLng([data.latitude, data.longitude]).setPopupContent(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`);
-      }
     })
-    .catch(err => alert("Error fetching IP info"));
+    .catch(err=>alert("Error fetching IP info"));
 });
 
 // Initial run + interval
 checkIP();
-setInterval(checkIP, 30000);
+setInterval(checkIP,30000);
 </script>
 </body>
 </html>
