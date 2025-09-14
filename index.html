@@ -183,9 +183,9 @@ function setFaviconDanger(){
 
 // Render data
 function renderData(data){
-  if(!data || !data.ip) return;
+  if(!data) return;
 
-  document.getElementById("ip").textContent = data.ip;
+  document.getElementById("ip").textContent = data.ip || "N/A";
   document.getElementById("city").textContent = data.city || "N/A";
   document.getElementById("region").textContent = data.region || "N/A";
   document.getElementById("country").textContent = data.country_name || "N/A";
@@ -224,22 +224,23 @@ function checkIP(){
   fetch('https://ipapi.co/json/')
     .then(res => res.json())
     .then(data => {
-      if(!data || !data.ip) return;
+      if(!data) return;
 
-      // Only update if IP changed
-      if(!lastIP || lastIP !== data.ip){
-        if(lastIP){
-          document.getElementById("ipChangeAlert").style.display = "block";
-          document.getElementById("ipChangeAlert").innerHTML =
-            `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
-          document.getElementById("siteTitle").classList.add("glow");
-          setFaviconDanger();
-          startTitleBlink();
-        }
-        lastIP = data.ip;
-        renderData(data);
+      // Always render data to replace "Loading..."
+      renderData(data);
+
+      // Alert only if IP changed (and we had previous IP)
+      if(lastIP && data.ip && lastIP !== data.ip){
+        document.getElementById("ipChangeAlert").style.display = "block";
+        document.getElementById("ipChangeAlert").innerHTML =
+          `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
+        document.getElementById("siteTitle").classList.add("glow");
+        setFaviconDanger();
+        startTitleBlink();
       }
-      // If IP is the same, do nothing
+
+      // Update lastIP if valid
+      if(data.ip) lastIP = data.ip;
     })
     .catch(err => console.error("Error fetching IP data:", err));
 }
