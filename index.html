@@ -183,7 +183,9 @@ function setFaviconDanger(){
 
 // Render data
 function renderData(data){
-  document.getElementById("ip").textContent = data.ip || "N/A";
+  if(!data || !data.ip) return;
+
+  document.getElementById("ip").textContent = data.ip;
   document.getElementById("city").textContent = data.city || "N/A";
   document.getElementById("region").textContent = data.region || "N/A";
   document.getElementById("country").textContent = data.country_name || "N/A";
@@ -194,12 +196,12 @@ function renderData(data){
   const sym = currencySymbols[data.currency] || '';
   document.getElementById("currency").textContent = data.currency ? `${data.currency} ${sym}` : "N/A";
 
-  if (!map) {
+  if(!map && data.latitude && data.longitude){
     map = L.map('map').setView([data.latitude, data.longitude], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
     marker = L.marker([data.latitude, data.longitude]).addTo(map)
       .bindPopup(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`).openPopup();
-  } else {
+  } else if(data.latitude && data.longitude){
     map.setView([data.latitude, data.longitude], 10);
     marker.setLatLng([data.latitude, data.longitude]).setPopupContent(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`);
   }
@@ -222,21 +224,24 @@ function checkIP(){
   fetch('https://ipapi.co/json/')
     .then(res => res.json())
     .then(data => {
-      // Only show alert if new IP exists and is different
-      if (data.ip && lastIP && lastIP !== data.ip) {
-        document.getElementById("ipChangeAlert").style.display = "block";
-        document.getElementById("ipChangeAlert").innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
-        document.getElementById("siteTitle").classList.add("glow");
-        setFaviconDanger();
-        startTitleBlink();
+      if(!data || !data.ip) return;
+
+      // Only update if IP changed
+      if(!lastIP || lastIP !== data.ip){
+        if(lastIP){
+          document.getElementById("ipChangeAlert").style.display = "block";
+          document.getElementById("ipChangeAlert").innerHTML =
+            `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
+          document.getElementById("siteTitle").classList.add("glow");
+          setFaviconDanger();
+          startTitleBlink();
+        }
+        lastIP = data.ip;
+        renderData(data);
       }
-
-      // Update lastIP only if data.ip exists
-      if (data.ip) lastIP = data.ip;
-
-      renderData(data);
+      // If IP is the same, do nothing
     })
-    .catch(err => console.error(err));
+    .catch(err => console.error("Error fetching IP data:", err));
 }
 
 // Search IP function
@@ -246,6 +251,7 @@ document.getElementById("searchBtn").addEventListener("click", ()=>{
   fetch(`https://ipapi.co/${ip}/json/`)
     .then(res => res.json())
     .then(data => {
+      if(!data || !data.ip) return alert("Invalid IP or data not found");
       renderData(data);
       if(data.latitude && data.longitude){
         map.setView([data.latitude, data.longitude], 10);
