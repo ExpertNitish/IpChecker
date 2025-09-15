@@ -1,267 +1,363 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>IP & Location Tracker</title>
-
 <!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-
+<link
+  href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+  rel="stylesheet"
+/>
 <!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
 <!-- Default favicon -->
-<link id="favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-size='42'%3E🌐%3C/text%3E%3C/svg%3E">
-
+<link
+  id="favicon"
+  rel="icon"
+  type="image/svg+xml"
+  href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-size='42'%3E🌐%3C/text%3E%3C/svg%3E"
+/>
 <style>
-body {
-  margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #0072ff, #00c6ff);
-  color: #333;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 30px 15px;
-  box-sizing: border-box;
-}
-
-h1 {
-  color: #fff;
-  font-size: 28px;
-  text-align: center;
-  margin-bottom: 20px;
-  transition: all 0.3s ease-in-out;
-}
-
-/* Glow effect for heading */
-.glow {
-  animation: glowPulse 1s infinite alternate;
-}
-@keyframes glowPulse {
-  from { text-shadow: 0 0 5px #ffcc00, 0 0 10px #ffcc00; }
-  to { text-shadow: 0 0 20px #ff6600, 0 0 30px #ff3300; }
-}
-
-/* Notification bar */
-#ipChangeAlert {
-  display: none;
-  background: #ffcc00;
-  color: #222;
-  font-weight: bold;
-  padding: 12px 20px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  text-align: center;
-  animation: glowBar 1s infinite alternate;
-  box-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
-  width: 100%;
-  max-width: 600px;
-}
-@keyframes glowBar {
-  from { box-shadow: 0 0 10px rgba(255, 204, 0, 0.8); }
-  to { box-shadow: 0 0 20px rgba(255, 102, 0, 1); }
-}
-
-/* Search Box */
-.search-box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 25px;
-}
-.search-box input[type="text"] {
-  padding: 10px 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px 0 0 6px;
-  outline: none;
-  font-size: 14px;
-}
-.search-box button {
-  padding: 10px 18px;
-  border: none;
-  background: #0066ff;
-  color: #fff;
-  border-radius: 0 6px 6px 0;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-}
-.search-box button:hover {
-  background: #004ecc;
-}
-
-/* Info Box */
-.info-box {
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  padding: 25px;
-  width: 100%;
-  max-width: 400px;
-  margin-bottom: 30px;
-}
-.info-box table { width: 100%; border-collapse: collapse; }
-.info-box td {
-  padding: 10px 6px;
-  border-bottom: 1px solid #eee;
-  font-size: 14px;
-  color: #333;
-}
-.info-box td:first-child { font-weight: bold; color: #555; }
-.info-box tr:last-child td { border-bottom: none; }
-
-/* Map */
-#map { height: 400px; width: 100%; max-width: 600px; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); margin-bottom: 30px; }
-
-/* Footer */
-footer { color: #fff; margin-bottom: 15px; font-weight: 500; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); text-align: center; }
-
-/* Info message */
-#infoMessage {
-  color: #fff;
-  max-width: 600px;
-  text-align: center;
-  margin-bottom: 15px;
-  font-size: 14px;
-}
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0072ff, #00c6ff);
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 15px;
+    box-sizing: border-box;
+  }
+  h1 {
+    color: #fff;
+    font-size: 28px;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: all 0.3s ease-in-out;
+  }
+  /* Glow effect for heading */
+  .glow {
+    animation: glowPulse 1s infinite alternate;
+  }
+  @keyframes glowPulse {
+    from {
+      text-shadow: 0 0 5px #ffcc00, 0 0 10px #ffcc00;
+    }
+    to {
+      text-shadow: 0 0 20px #ff6600, 0 0 30px #ff3300;
+    }
+  }
+  /* Notification bar */
+  #ipChangeAlert {
+    display: none;
+    background: #ffcc00;
+    color: #222;
+    font-weight: bold;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: center;
+    animation: glowBar 1s infinite alternate;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+    width: 100%;
+    max-width: 600px;
+  }
+  @keyframes glowBar {
+    from {
+      box-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+    }
+    to {
+      box-shadow: 0 0 20px rgba(255, 102, 0, 1);
+    }
+  }
+  /* Search Box */
+  .search-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 25px;
+  }
+  .search-box input[type="text"] {
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px 0 0 6px;
+    outline: none;
+    font-size: 14px;
+  }
+  .search-box button {
+    padding: 10px 18px;
+    border: none;
+    background: #0066ff;
+    color: #fff;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+  }
+  .search-box button:hover {
+    background: #004ecc;
+  }
+  /* Info Box */
+  .info-box {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    padding: 25px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 30px;
+  }
+  .info-box table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .info-box td {
+    padding: 10px 6px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    color: #333;
+  }
+  .info-box td:first-child {
+    font-weight: bold;
+    color: #555;
+  }
+  .info-box tr:last-child td {
+    border-bottom: none;
+  }
+  /* Map */
+  #map {
+    height: 400px;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    margin-bottom: 30px;
+  }
+  /* Footer */
+  footer {
+    color: #fff;
+    margin-bottom: 15px;
+    font-weight: 500;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    text-align: center;
+  }
+  /* Info message */
+  #infoMessage {
+    color: #fff;
+    max-width: 600px;
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 14px;
+  }
 </style>
 </head>
 <body>
+  <h1 id="siteTitle">IP & Location Tracker</h1>
+  <div id="infoMessage">
+    This website shows your IP and location. If your IP changes, you will get an alert showing your old and new IP.
+  </div>
+  <div id="ipChangeAlert"></div>
+  <div class="search-box">
+    <input type="text" id="searchIP" placeholder="Enter IP address to search" />
+    <button id="searchBtn">Search</button>
+  </div>
+  <div class="info-box">
+    <table>
+      <tr>
+        <td>IP Address</td>
+        <td id="ip">Loading...</td>
+      </tr>
+      <tr>
+        <td>City</td>
+        <td id="city">Loading...</td>
+      </tr>
+      <tr>
+        <td>Region/State</td>
+        <td id="region">Loading...</td>
+      </tr>
+      <tr>
+        <td>Country</td>
+        <td id="country">Loading...</td>
+      </tr>
+      <tr>
+        <td>ZIP / Postal Code</td>
+        <td id="zip">Loading...</td>
+      </tr>
+      <tr>
+        <td>Latitude</td>
+        <td id="lat">Loading...</td>
+      </tr>
+      <tr>
+        <td>Longitude</td>
+        <td id="lon">Loading...</td>
+      </tr>
+      <tr>
+        <td>Time Zone</td>
+        <td id="timezone">Loading...</td>
+      </tr>
+      <tr>
+        <td>Currency</td>
+        <td id="currency">Loading...</td>
+      </tr>
+    </table>
+  </div>
+  <div id="map"></div>
+  <footer>Built with 💜 Survey Captures</footer>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    let lastIP = null;
+    let firstLoad = true;
+    let map, marker;
+    let titleBlinkInterval = null;
+    const currencySymbols = {
+      USD: "$",
+      CAD: "CA$",
+      AED: "د.إ",
+      SAR: "ر.س",
+      INR: "₹",
+      GBP: "£",
+      EUR: "€",
+    };
+    // Favicon functions
+    function setFaviconNormal() {
+      const favicon = document.getElementById("favicon");
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="42">🌐</text></svg>`;
+      favicon.href = "data:image/svg+xml," + encodeURIComponent(svg);
+    }
+    function setFaviconDanger() {
+      const favicon = document.getElementById("favicon");
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="48">⚠️</text></svg>`;
+      favicon.href = "data:image/svg+xml," + encodeURIComponent(svg);
+    }
+    // Render function
+    function renderData(data) {
+      if (!data) return;
+      document.getElementById("ip").textContent = data.ip || "N/A";
+      document.getElementById("city").textContent = data.city || "N/A";
+      document.getElementById("region").textContent = data.region || "N/A";
+      document.getElementById("country").textContent = data.country_name || "N/A";
+      document.getElementById("zip").textContent = data.postal || "N/A";
+      document.getElementById("lat").textContent = data.latitude || "N/A";
+      document.getElementById("lon").textContent = data.longitude || "N/A";
+      document.getElementById("timezone").textContent = data.timezone || "N/A";
+      const sym = currencySymbols[data.currency] || "";
+      document.getElementById(
+        "currency"
+      ).textContent = data.currency
+        ? `${data.currency} ${sym}`
+        : "N/A";
 
-<h1 id="siteTitle">IP & Location Tracker</h1>
-<div id="infoMessage">This website shows your IP and location. If your IP changes, you will get an alert showing your old and new IP.</div>
-
-<div id="ipChangeAlert"></div>
-
-<div class="search-box">
-  <input type="text" id="searchIP" placeholder="Enter IP address to search">
-  <button id="searchBtn">Search</button>
-</div>
-
-<div class="info-box">
-  <table>
-    <tr><td>IP Address</td><td id="ip">Loading...</td></tr>
-    <tr><td>City</td><td id="city">Loading...</td></tr>
-    <tr><td>Region/State</td><td id="region">Loading...</td></tr>
-    <tr><td>Country</td><td id="country">Loading...</td></tr>
-    <tr><td>ZIP / Postal Code</td><td id="zip">Loading...</td></tr>
-    <tr><td>Latitude</td><td id="lat">Loading...</td></tr>
-    <tr><td>Longitude</td><td id="lon">Loading...</td></tr>
-    <tr><td>Time Zone</td><td id="timezone">Loading...</td></tr>
-    <tr><td>Currency</td><td id="currency">Loading...</td></tr>
-  </table>
-</div>
-
-<div id="map"></div>
-<footer>Built with 💜 Survey Captures</footer>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
-let lastIP = null;
-let firstLoad = true;
-let map, marker;
-let titleBlinkInterval = null;
-
-const currencySymbols = { USD:'$', CAD:'CA$', AED:'د.إ', SAR:'ر.س', INR:'₹', GBP:'£', EUR:'€' };
-
-// Favicon functions
-function setFaviconNormal(){
-  const favicon = document.getElementById('favicon');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="42">🌐</text></svg>`;
-  favicon.href = "data:image/svg+xml," + encodeURIComponent(svg);
-}
-function setFaviconDanger(){
-  const favicon = document.getElementById('favicon');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="48">⚠️</text></svg>`;
-  favicon.href = "data:image/svg+xml," + encodeURIComponent(svg);
-}
-
-// Render function
-function renderData(data){
-  if(!data) return;
-  document.getElementById("ip").textContent = data.ip || "N/A";
-  document.getElementById("city").textContent = data.city || "N/A";
-  document.getElementById("region").textContent = data.region || "N/A";
-  document.getElementById("country").textContent = data.country_name || "N/A";
-  document.getElementById("zip").textContent = data.postal || "N/A";
-  document.getElementById("lat").textContent = data.latitude || "N/A";
-  document.getElementById("lon").textContent = data.longitude || "N/A";
-  document.getElementById("timezone").textContent = data.timezone || "N/A";
-  const sym = currencySymbols[data.currency] || '';
-  document.getElementById("currency").textContent = data.currency ? `${data.currency} ${sym}` : "N/A";
-
-  if(!map && data.latitude && data.longitude){
-    map = L.map('map').setView([data.latitude,data.longitude],10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
-    marker = L.marker([data.latitude,data.longitude]).addTo(map)
-      .bindPopup(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`).openPopup();
-  } else if(data.latitude && data.longitude){
-    map.setView([data.latitude,data.longitude],10);
-    marker.setLatLng([data.latitude,data.longitude]).setPopupContent(`<b>${data.city || 'Unknown'}, ${data.region || ''}</b><br>${data.country_name || ''}`);
-  }
-}
-
-// Blink title
-function startTitleBlink(){
-  if(titleBlinkInterval) clearInterval(titleBlinkInterval);
-  const original = "IP & Location Tracker";
-  const alertTitle = "⚠️⚠️⚠️⚠️⚠️⚠️";
-  let showAlert = false;
-  titleBlinkInterval = setInterval(()=>{
-    document.title = showAlert? alertTitle : original;
-    showAlert = !showAlert;
-  },1000);
-}
-
-// Check IP
-function checkIP(){
-  fetch('https://ipapi.co/json/')
-    .then(res=>res.json())
-    .then(data=>{
-      if(!data || !data.ip) return;
-
-      // First load: render all details
-      if(firstLoad){
-        renderData(data);
-        lastIP = data.ip;
-        firstLoad = false;
-        return;
+      if (!map && data.latitude && data.longitude) {
+        map = L.map("map").setView([data.latitude, data.longitude], 10);
+        L.tileLayer(
+          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors",
+          }
+        ).addTo(map);
+        marker = L.marker([data.latitude, data.longitude])
+          .addTo(map)
+          .bindPopup(
+            `<b>${data.city || "Unknown"}, ${data.region || ""}</b><br>${data.country_name || ""}`
+          )
+          .openPopup();
+      } else if (data.latitude && data.longitude) {
+        map.setView([data.latitude, data.longitude], 10);
+        marker
+          .setLatLng([data.latitude, data.longitude])
+          .setPopupContent(
+            `<b>${data.city || "Unknown"}, ${data.region || ""}</b><br>${data.country_name || ""}`
+          );
+      }
+    }
+    // Blink title
+    function startTitleBlink() {
+      if (titleBlinkInterval) clearInterval(titleBlinkInterval);
+      const original = "IP & Location Tracker";
+      const alertTitle = "⚠️⚠️⚠️⚠️⚠️⚠️";
+      let showAlert = false;
+      titleBlinkInterval = setInterval(() => {
+        document.title = showAlert ? alertTitle : original;
+        showAlert = !showAlert;
+      }, 1000);
+    }
+    // Check IP
+    function checkIP() {
+      // Show loading placeholders only on first load
+      if (firstLoad) {
+        [
+          "ip",
+          "city",
+          "region",
+          "country",
+          "zip",
+          "lat",
+          "lon",
+          "timezone",
+          "currency",
+        ].forEach((id) => {
+          document.getElementById(id).textContent = "Loading...";
+        });
       }
 
-      // Only update if IP changed
-      if(lastIP && lastIP !== data.ip){
-        renderData(data);
-        document.getElementById("ipChangeAlert").style.display="block";
-        document.getElementById("ipChangeAlert").innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
-        document.getElementById("siteTitle").classList.add("glow");
-        setFaviconDanger();
-        startTitleBlink();
-        lastIP = data.ip;
-      }
-    }).catch(err=>console.error("Error fetching IP data:", err));
-}
+      fetch("https://ipapi.co/json/")
+        .then((res) => {
+          if (!res.ok) throw new Error("Network response was not ok");
+          return res.json();
+        })
+        .then((data) => {
+          if (!data || !data.ip) throw new Error("Invalid data received");
+          // Render data immediately on first load
+          if (firstLoad) {
+            renderData(data);
+            lastIP = data.ip;
+            firstLoad = false;
+            return;
+          }
+          // On subsequent fetch, update only if IP changed
+          if (lastIP && lastIP !== data.ip) {
+            renderData(data);
+            document.getElementById("ipChangeAlert").style.display = "block";
+            document.getElementById(
+              "ipChangeAlert"
+            ).innerHTML = `⚠️ Your IP has changed!<br>Old IP: <b>${lastIP}</b><br>New IP: <b>${data.ip}</b>`;
+            document.getElementById("siteTitle").classList.add("glow");
+            setFaviconDanger();
+            startTitleBlink();
+            lastIP = data.ip;
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching IP data:", err);
+          // Optional: could display error message or retry
+        });
+    }
+    // Search IP
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initial run and interval start
+      checkIP();
+      setInterval(checkIP, 30000);
 
-// Search IP
-document.getElementById("searchBtn").addEventListener("click", ()=>{
-  const ip = document.getElementById("searchIP").value.trim();
-  if(!ip) return alert("Please enter a valid IP address");
-
-  fetch(`https://ipapi.co/${ip}/json/`)
-    .then(res=>res.json())
-    .then(data=>{
-      if(!data) return alert("No data found for this IP");
-      if(data.error) return alert(`Error: ${data.reason || 'Invalid IP'}`);
-      renderData(data);
-    })
-    .catch(err=>alert("Error fetching IP info"));
-});
-
-// Initial run + interval
-checkIP();
-setInterval(checkIP,30000);
-</script>
+      document.getElementById("searchBtn").addEventListener("click", () => {
+        const ip = document.getElementById("searchIP").value.trim();
+        if (!ip) return alert("Please enter a valid IP address");
+        fetch(`https://ipapi.co/${ip}/json/`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data) return alert("No data found for this IP");
+            if (data.error) return alert(`Error: ${data.reason || "Invalid IP"}`);
+            renderData(data);
+          })
+          .catch(() => alert("Error fetching IP info"));
+      });
+    });
+  </script>
 </body>
 </html>
