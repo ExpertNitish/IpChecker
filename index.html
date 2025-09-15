@@ -2,19 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>IP & Location Tracker</title>
-<!-- Google Fonts -->
 <link
   href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
   rel="stylesheet"
 />
-<!-- Leaflet CSS -->
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet/dist/leaflet.css"
-/>
-<!-- Default favicon -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <link
   id="favicon"
   rel="icon"
@@ -41,7 +35,6 @@
     margin-bottom: 20px;
     transition: all 0.3s ease-in-out;
   }
-  /* Glow effect for heading */
   .glow {
     animation: glowPulse 1s infinite alternate;
   }
@@ -53,7 +46,6 @@
       text-shadow: 0 0 20px #ff6600, 0 0 30px #ff3300;
     }
   }
-  /* Notification bar */
   #ipChangeAlert {
     display: none;
     background: #ffcc00;
@@ -76,7 +68,6 @@
       box-shadow: 0 0 20px rgba(255, 102, 0, 1);
     }
   }
-  /* Search Box */
   .search-box {
     display: flex;
     justify-content: center;
@@ -103,7 +94,6 @@
   .search-box button:hover {
     background: #004ecc;
   }
-  /* Info Box */
   .info-box {
     background: #fff;
     border-radius: 10px;
@@ -130,7 +120,6 @@
   .info-box tr:last-child td {
     border-bottom: none;
   }
-  /* Map */
   #map {
     height: 400px;
     width: 100%;
@@ -139,7 +128,6 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     margin-bottom: 30px;
   }
-  /* Footer */
   footer {
     color: #fff;
     margin-bottom: 15px;
@@ -147,7 +135,6 @@
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
     text-align: center;
   }
-  /* Info message */
   #infoMessage {
     color: #fff;
     max-width: 600px;
@@ -169,50 +156,23 @@
   </div>
   <div class="info-box">
     <table>
-      <tr>
-        <td>IP Address</td>
-        <td id="ip">Loading...</td>
-      </tr>
-      <tr>
-        <td>City</td>
-        <td id="city">Loading...</td>
-      </tr>
-      <tr>
-        <td>Region/State</td>
-        <td id="region">Loading...</td>
-      </tr>
-      <tr>
-        <td>Country</td>
-        <td id="country">Loading...</td>
-      </tr>
-      <tr>
-        <td>ZIP / Postal Code</td>
-        <td id="zip">Loading...</td>
-      </tr>
-      <tr>
-        <td>Latitude</td>
-        <td id="lat">Loading...</td>
-      </tr>
-      <tr>
-        <td>Longitude</td>
-        <td id="lon">Loading...</td>
-      </tr>
-      <tr>
-        <td>Time Zone</td>
-        <td id="timezone">Loading...</td>
-      </tr>
-      <tr>
-        <td>Currency</td>
-        <td id="currency">Loading...</td>
-      </tr>
+      <tr><td>IP Address</td><td id="ip">Loading...</td></tr>
+      <tr><td>City</td><td id="city">Loading...</td></tr>
+      <tr><td>Region/State</td><td id="region">Loading...</td></tr>
+      <tr><td>Country</td><td id="country">Loading...</td></tr>
+      <tr><td>ZIP / Postal Code</td><td id="zip">Loading...</td></tr>
+      <tr><td>Latitude</td><td id="lat">Loading...</td></tr>
+      <tr><td>Longitude</td><td id="lon">Loading...</td></tr>
+      <tr><td>Time Zone</td><td id="timezone">Loading...</td></tr>
+      <tr><td>Currency</td><td id="currency">Loading...</td></tr>
     </table>
   </div>
   <div id="map"></div>
   <footer>Built with 💜 Survey Captures</footer>
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     let lastIP = null;
-    let firstLoad = true;
     let map, marker;
     let titleBlinkInterval = null;
     const currencySymbols = {
@@ -224,7 +184,7 @@
       GBP: "£",
       EUR: "€",
     };
-    // Favicon functions
+
     function setFaviconNormal() {
       const favicon = document.getElementById("favicon");
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="42">🌐</text></svg>`;
@@ -235,7 +195,17 @@
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="48">⚠️</text></svg>`;
       favicon.href = "data:image/svg+xml," + encodeURIComponent(svg);
     }
-    // Render function
+    function startTitleBlink() {
+      if (titleBlinkInterval) clearInterval(titleBlinkInterval);
+      const original = "IP & Location Tracker";
+      const alertTitle = "⚠️⚠️⚠️⚠️⚠️⚠️";
+      let showAlert = false;
+      titleBlinkInterval = setInterval(() => {
+        document.title = showAlert ? alertTitle : original;
+        showAlert = !showAlert;
+      }, 1000);
+    }
+
     function renderData(data) {
       if (!data) return;
       document.getElementById("ip").textContent = data.ip || "N/A";
@@ -255,13 +225,10 @@
 
       if (!map && data.latitude && data.longitude) {
         map = L.map("map").setView([data.latitude, data.longitude], 10);
-        L.tileLayer(
-          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          {
-            maxZoom: 19,
-            attribution: "&copy; OpenStreetMap contributors",
-          }
-        ).addTo(map);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap contributors",
+        }).addTo(map);
         marker = L.marker([data.latitude, data.longitude])
           .addTo(map)
           .bindPopup(
@@ -277,53 +244,38 @@
           );
       }
     }
-    // Blink title
-    function startTitleBlink() {
-      if (titleBlinkInterval) clearInterval(titleBlinkInterval);
-      const original = "IP & Location Tracker";
-      const alertTitle = "⚠️⚠️⚠️⚠️⚠️⚠️";
-      let showAlert = false;
-      titleBlinkInterval = setInterval(() => {
-        document.title = showAlert ? alertTitle : original;
-        showAlert = !showAlert;
-      }, 1000);
-    }
-    // Check IP
-    function checkIP() {
-      // Show loading placeholders only on first load
-      if (firstLoad) {
-        [
-          "ip",
-          "city",
-          "region",
-          "country",
-          "zip",
-          "lat",
-          "lon",
-          "timezone",
-          "currency",
-        ].forEach((id) => {
-          document.getElementById(id).textContent = "Loading...";
-        });
-      }
 
-      fetch("https://ipapi.co/json/")
+    function resetLoading() {
+      [
+        "ip",
+        "city",
+        "region",
+        "country",
+        "zip",
+        "lat",
+        "lon",
+        "timezone",
+        "currency",
+      ].forEach((id) => {
+        document.getElementById(id).textContent = "Loading...";
+      });
+    }
+
+    function checkIP() {
+      // Show temporary loading on each check for better UX
+      resetLoading();
+
+      fetch("https://ipapi.co/json/", {
+        headers: { "User-Agent": "ipapi.js-client" },
+      })
         .then((res) => {
           if (!res.ok) throw new Error("Network response was not ok");
           return res.json();
         })
         .then((data) => {
           if (!data || !data.ip) throw new Error("Invalid data received");
-          // Render data immediately on first load
-          if (firstLoad) {
-            renderData(data);
-            lastIP = data.ip;
-            firstLoad = false;
-            return;
-          }
-          // On subsequent fetch, update only if IP changed
+
           if (lastIP && lastIP !== data.ip) {
-            renderData(data);
             document.getElementById("ipChangeAlert").style.display = "block";
             document.getElementById(
               "ipChangeAlert"
@@ -331,31 +283,80 @@
             document.getElementById("siteTitle").classList.add("glow");
             setFaviconDanger();
             startTitleBlink();
-            lastIP = data.ip;
+          } else {
+            document.getElementById("ipChangeAlert").style.display = "none";
+            document.getElementById("siteTitle").classList.remove("glow");
+            setFaviconNormal();
+            if (titleBlinkInterval) clearInterval(titleBlinkInterval);
+            document.title = "IP & Location Tracker";
           }
+
+          renderData(data);
+          lastIP = data.ip;
         })
         .catch((err) => {
           console.error("Error fetching IP data:", err);
-          // Optional: could display error message or retry
+          // Show error message and clear loading placeholders
+          [
+            "ip",
+            "city",
+            "region",
+            "country",
+            "zip",
+            "lat",
+            "lon",
+            "timezone",
+            "currency",
+          ].forEach((id) => {
+            document.getElementById(id).textContent = "N/A";
+          });
+          document.getElementById("ipChangeAlert").style.display = "none";
+          document.getElementById("siteTitle").classList.remove("glow");
+          setFaviconNormal();
+          if (titleBlinkInterval) clearInterval(titleBlinkInterval);
+          document.title = "IP & Location Tracker";
         });
     }
-    // Search IP
+
     document.addEventListener("DOMContentLoaded", () => {
-      // Initial run and interval start
       checkIP();
       setInterval(checkIP, 30000);
 
       document.getElementById("searchBtn").addEventListener("click", () => {
         const ip = document.getElementById("searchIP").value.trim();
         if (!ip) return alert("Please enter a valid IP address");
-        fetch(`https://ipapi.co/${ip}/json/`)
-          .then((res) => res.json())
+
+        resetLoading();
+
+        fetch(`https://ipapi.co/${ip}/json/`, {
+          headers: { "User-Agent": "ipapi.js-client" },
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Network response was not ok");
+            return res.json();
+          })
           .then((data) => {
             if (!data) return alert("No data found for this IP");
             if (data.error) return alert(`Error: ${data.reason || "Invalid IP"}`);
             renderData(data);
+            document.getElementById("ipChangeAlert").style.display = "none";
           })
-          .catch(() => alert("Error fetching IP info"));
+          .catch(() => {
+            alert("Error fetching IP info");
+            [
+              "ip",
+              "city",
+              "region",
+              "country",
+              "zip",
+              "lat",
+              "lon",
+              "timezone",
+              "currency",
+            ].forEach((id) => {
+              document.getElementById(id).textContent = "N/A";
+            });
+          });
       });
     });
   </script>
