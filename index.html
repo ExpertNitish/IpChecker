@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>IP Lookup</title>
+    <title>IP Address Lookup</title>
     <link rel="icon" id="favicon" type="image/png" href="https://static.thenounproject.com/png/4490545-200.png">
     <style>
         body {
@@ -21,10 +21,25 @@
             box-shadow: 0 12px 32px rgba(0,0,0,0.13);
             padding: 2em;
         }
-        h2 {
-            letter-spacing: 3px;
-            text-align: center;
+        .ip-title {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             margin-bottom: 1.2em;
+        }
+        .big-ip {
+            font-size: 2.3em;
+            letter-spacing: 0.21em;
+            font-weight: bold;
+            background: rgba(0,0,0,0.13);
+            border-radius: 8px;
+            padding: 0.45em 0.12em;
+            margin-top: 0.2em;
+            color: #fff;
+        }
+        .danger {
+            color: #db3355;
+            font-weight: bold;
         }
         .info-row {
             display: flex;
@@ -69,15 +84,14 @@
         td {
             padding: 6px 0;
         }
-        .danger {
-            color: #db3355;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 id="main-title">IP Lookup</h2>
+        <div class="ip-title" id="main-title">
+            <span>Current IP Address</span>
+            <span class="big-ip" id="display-ip"></span>
+        </div>
         <div class="info-row">
             <input type="text" id="ip-input" placeholder="Enter IP or leave blank for your IP">
             <button onclick="lookupIP()">IP Lookup</button>
@@ -89,7 +103,10 @@
         let previousIP = "";
         let faviconNormal = 'https://static.thenounproject.com/png/4490545-200.png';
         let faviconDanger = 'https://cdn-icons-png.flaticon.com/512/463/463612.png';
-        let mainTitle = "IP Lookup";
+        let mainTitle = "Current IP Address";
+        let blinkInterval = null;
+        let isBlinking = false;
+
         function setFavicon(iconURL) {
             let link = document.getElementById("favicon");
             if (!link) {
@@ -101,21 +118,50 @@
             link.href = iconURL;
         }
 
+        function spaceIP(ip) {
+            return ip.split('').join(' ');
+        }
+
+        function startTitleBlink() {
+            if (isBlinking) return;
+            let on = true;
+            document.title = "⚠️ Danger: IP Changed!";
+            isBlinking = true;
+            blinkInterval = setInterval(() => {
+                document.title = on ? "⚠️ Danger: IP Changed!" : "IP Changed!";
+                on = !on;
+            }, 600);
+        }
+
+        function stopTitleBlink() {
+            if (blinkInterval) {
+                clearInterval(blinkInterval);
+                blinkInterval = null;
+            }
+            document.title = mainTitle;
+            isBlinking = false;
+        }
+
         function showIPChanged(oldIP, newIP) {
             let msgDiv = document.getElementById('ip-change-message');
             msgDiv.innerHTML = `IP Changed!<br>Old IP: <span>${oldIP}</span><br>New IP: <span>${newIP}</span>`;
             msgDiv.style.display = "block";
-            document.title = "⚠️ Danger: IP Changed!";
+            startTitleBlink();
             setFavicon(faviconDanger);
             document.getElementById('main-title').classList.add('danger');
         }
-        
+
         function hideIPChanged() {
             let msgDiv = document.getElementById('ip-change-message');
             msgDiv.style.display = "none";
-            document.title = mainTitle;
+            stopTitleBlink();
             setFavicon(faviconNormal);
             document.getElementById('main-title').classList.remove('danger');
+        }
+
+        function updateBigIP(ip) {
+            let displayIP = document.getElementById('display-ip');
+            displayIP.innerHTML = '<b>' + spaceIP(ip) + '</b>';
         }
 
         function lookupIP(customIP) {
@@ -125,6 +171,7 @@
                 .then(response => response.json())
                 .then(data => {
                     let newIP = data.ip;
+                    updateBigIP(newIP);
                     if (previousIP && newIP !== previousIP) {
                         showIPChanged(previousIP, newIP);
                     } else {
