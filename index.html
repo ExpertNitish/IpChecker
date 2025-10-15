@@ -21,21 +21,28 @@
             box-shadow: 0 12px 32px rgba(0,0,0,0.13);
             padding: 2em;
         }
-        .ip-title {
+        .ip-header-row {
             display: flex;
-            flex-direction: column;
             align-items: center;
+            justify-content: center;
             margin-bottom: 1.2em;
+            font-size: 1.6em;
+        }
+        .ip-label {
+            font-weight: normal;
+            margin-right: 14px;
+            letter-spacing: 1px;
+            flex-shrink: 0;
         }
         .big-ip {
-            font-size: 2.3em;
-            letter-spacing: 0.21em;
+            font-size: 1.3em;
+            letter-spacing: 0.18em;
             font-weight: bold;
-            background: rgba(0,0,0,0.13);
-            border-radius: 8px;
-            padding: 0.45em 0.12em;
-            margin-top: 0.2em;
+            background: rgba(0,0,0,0.10);
+            border-radius: 10px;
+            padding: 0.18em 0.4em;
             color: #fff;
+            box-shadow: 0 0 14px #299df144;
         }
         .danger {
             color: #db3355;
@@ -88,8 +95,8 @@
 </head>
 <body>
     <div class="container">
-        <div class="ip-title" id="main-title">
-            <span>Current IP Address</span>
+        <div class="ip-header-row" id="main-title">
+            <span class="ip-label">Current IP Address:</span>
             <span class="big-ip" id="display-ip"></span>
         </div>
         <div class="info-row">
@@ -198,7 +205,7 @@
             lookupIP();
             setInterval(() => {
                 lookupIP();
-            }, 15000); // check every 15 sec
+            }, 15000);
         };
 
         document.getElementById('ip-input').addEventListener('keydown', function(e) {
