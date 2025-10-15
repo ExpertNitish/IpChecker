@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>IP Address Lookup</title>
-    <link rel="icon" id="favicon" type="image/png" href="https://static.thenounproject.com/png/4490545-200.png">
+    <link rel="icon" id="favicon" type="image/png" href="https://static.thenounproject.com/png/4490545-200.png" />
     <style>
         body {
             background: linear-gradient(135deg, #299df1 0%, #5ecbf3 100%);
@@ -26,23 +26,27 @@
             align-items: center;
             justify-content: center;
             margin-bottom: 1.2em;
-            font-size: 1.6em;
+            font-size: 1.45em;
+            flex-wrap: nowrap;
         }
         .ip-label {
             font-weight: normal;
             margin-right: 14px;
             letter-spacing: 1px;
             flex-shrink: 0;
+            white-space: nowrap;
         }
         .big-ip {
-            font-size: 1.3em;
-            letter-spacing: 0.18em;
+            font-size: 1.08em;
+            letter-spacing: 2px;
             font-weight: bold;
             background: rgba(0,0,0,0.10);
             border-radius: 10px;
-            padding: 0.18em 0.4em;
+            padding: 0.16em 0.55em;
             color: #fff;
-            box-shadow: 0 0 14px #299df144;
+            box-shadow: 0 0 10px #299df133;
+            white-space: nowrap;
+            display: inline-block;
         }
         .danger {
             color: #db3355;
@@ -100,7 +104,7 @@
             <span class="big-ip" id="display-ip"></span>
         </div>
         <div class="info-row">
-            <input type="text" id="ip-input" placeholder="Enter IP or leave blank for your IP">
+            <input type="text" id="ip-input" placeholder="Enter IP or leave blank for your IP" />
             <button onclick="lookupIP()">IP Lookup</button>
         </div>
         <div id="ip-change-message"></div>
@@ -108,9 +112,9 @@
     </div>
     <script>
         let previousIP = "";
-        let faviconNormal = 'https://static.thenounproject.com/png/4490545-200.png';
-        let faviconDanger = 'https://cdn-icons-png.flaticon.com/512/463/463612.png';
-        let mainTitle = "Current IP Address";
+        const faviconNormal = 'https://static.thenounproject.com/png/4490545-200.png';
+        const faviconDanger = 'https://cdn-icons-png.flaticon.com/512/463/463612.png';
+        const mainTitle = "Current IP Address";
         let blinkInterval = null;
         let isBlinking = false;
 
@@ -125,18 +129,14 @@
             link.href = iconURL;
         }
 
-        function spaceIP(ip) {
-            return ip.split('').join(' ');
-        }
-
         function startTitleBlink() {
             if (isBlinking) return;
-            let on = true;
+            let showDanger = true;
             document.title = "⚠️ Danger: IP Changed!";
             isBlinking = true;
             blinkInterval = setInterval(() => {
-                document.title = on ? "⚠️ Danger: IP Changed!" : "IP Changed!";
-                on = !on;
+                document.title = showDanger ? "⚠️ Danger: IP Changed!" : "IP Changed!";
+                showDanger = !showDanger;
             }, 600);
         }
 
@@ -150,7 +150,7 @@
         }
 
         function showIPChanged(oldIP, newIP) {
-            let msgDiv = document.getElementById('ip-change-message');
+            const msgDiv = document.getElementById('ip-change-message');
             msgDiv.innerHTML = `IP Changed!<br>Old IP: <span>${oldIP}</span><br>New IP: <span>${newIP}</span>`;
             msgDiv.style.display = "block";
             startTitleBlink();
@@ -159,7 +159,7 @@
         }
 
         function hideIPChanged() {
-            let msgDiv = document.getElementById('ip-change-message');
+            const msgDiv = document.getElementById('ip-change-message');
             msgDiv.style.display = "none";
             stopTitleBlink();
             setFavicon(faviconNormal);
@@ -167,17 +167,17 @@
         }
 
         function updateBigIP(ip) {
-            let displayIP = document.getElementById('display-ip');
-            displayIP.innerHTML = '<b>' + spaceIP(ip) + '</b>';
+            const displayIP = document.getElementById('display-ip');
+            displayIP.innerHTML = '<b>' + ip + '</b>';
         }
 
         function lookupIP(customIP) {
-            let ipAPI = "https://ipapi.co/";
-            let query = (customIP || "") + "/json/";
+            const ipAPI = "https://ipapi.co/";
+            const query = (customIP || "") + "/json/";
             fetch(ipAPI + query)
                 .then(response => response.json())
                 .then(data => {
-                    let newIP = data.ip;
+                    const newIP = data.ip;
                     updateBigIP(newIP);
                     if (previousIP && newIP !== previousIP) {
                         showIPChanged(previousIP, newIP);
@@ -185,7 +185,7 @@
                         hideIPChanged();
                     }
                     previousIP = newIP;
-                    let details = `
+                    const details = `
                         <tr><td>IP Address:</td><td>${data.ip}</td></tr>
                         <tr><td>City:</td><td>${data.city}</td></tr>
                         <tr><td>Region:</td><td>${data.region}</td></tr>
@@ -201,14 +201,14 @@
                 });
         }
 
-        window.onload = function() {
+        window.onload = function () {
             lookupIP();
             setInterval(() => {
                 lookupIP();
-            }, 15000);
+            }, 15000); // check every 15 sec
         };
 
-        document.getElementById('ip-input').addEventListener('keydown', function(e) {
+        document.getElementById('ip-input').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 lookupIP(this.value.trim());
             }
